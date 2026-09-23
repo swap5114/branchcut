@@ -1,0 +1,7 @@
+node_modules/
+dist/
+data/
+
+# Personal notes, kept off the public repo
+INTERVIEW.md
+LOOM.md

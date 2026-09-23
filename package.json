@@ -1,0 +1,25 @@
+{
+  "name": "branchcut",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Git for video timelines: intent diff and three-way merge for edit decision lists",
+  "type": "module",
+  "engines": {
+    "node": ">=22.6"
+  },
+  "scripts": {
+    "test": "node --experimental-strip-types --no-warnings --test --test-reporter=spec test/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "start": "node --experimental-strip-types --no-warnings src/server/main.ts",
+    "bench": "node --experimental-strip-types --no-warnings bench/bench.ts",
+    "build": "node scripts/build-demo.mjs",
+    "test:e2e": "npm run build && node --experimental-strip-types --no-warnings --test --test-reporter=spec e2e/demo.e2e.ts",
+    "demo": "npm run build && node scripts/serve-demo.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "esbuild": "^0.28.2",
+    "playwright-core": "^1.63.0",
+    "typescript": "^7.0.2"
+  }
+}

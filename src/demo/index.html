@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Branchcut</title>
+<meta name="description" content="Branch, diff and merge for video timelines. Two editors change the same cut; Branchcut explains each change in editor words and merges them.">
+<meta name="color-scheme" content="light dark">
+<style>/*STYLE*/</style>
+</head>
+<body>
+<a class="skip" href="#app">Skip to the demo</a>
+<header class="hero wrap">
+  <p class="eyebrow">Branchcut <span aria-hidden="true">·</span> version control for the edit, not the pixels</p>
+  <h1>Two editors, one cut, and no more <span class="nowrap">final_v3_actual (1).mp4</span></h1>
+  <p class="lede">
+    Branchcut versions the edit decision list: which piece of which file plays where.
+    Each editor works on a branch. The diff says what changed in editor words.
+    The merge combines both cuts by itself and asks only the questions a person must answer.
+  </p>
+  <div class="actions">
+    <button id="load" class="btn primary" data-key="load">Load the example edits</button>
+    <button id="reset" class="btn" data-key="reset">Start over</button>
+    <button id="theme" class="btn quiet" data-key="theme" aria-label="Colour theme: automatic">Theme: auto</button>
+  </div>
+</header>
+<main id="app" class="wrap" tabindex="-1">
+  <noscript><p>This demo runs the real merge engine in your browser, so it needs JavaScript.</p></noscript>
+</main>
+<footer class="wrap foot">
+  <p>Everything on this page runs in your browser: the same TypeScript core as the API server, with an in-memory repository. Nothing is sent anywhere.</p>
+</footer>
+<script>/*SCRIPT*/</script>
+</body>
+</html>
