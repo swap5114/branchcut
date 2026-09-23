@@ -89,6 +89,17 @@ test('clips that cross the edges of a ripple delete belong to the same sentence'
   assert.ok(intents(base, after)[0].clips.includes('b'));
 });
 
+test('the ripple is blamed on the clip right before the moved clips, not an earlier one of the same length', () => {
+  // From the demo video: Rahul deleted Point 1 (plain delete, 10s) and then
+  // ripple-deleted Point 3 (also 10s). Only Point 3 caused the slide.
+  const base = sampleTimeline();
+  const after = rippleDelete(deleteClip(base, 'p1'), 'p3');
+  assert.deepEqual(texts(base, after), [
+    'Removed "Point 1"',
+    'Ripple delete "Point 3" (with "Team b-roll"): 2 clips moved −10s',
+  ]);
+});
+
 test('split is one sentence', () => {
   const base = sampleTimeline();
   assert.deepEqual(texts(base, split(base, 'p1', s(8))), ['Split "Point 1" at 8s']);

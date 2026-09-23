@@ -163,3 +163,9 @@ One entry per phase: the decision, the other options, and why we chose this one.
 **Decision:** add "Add title here", "Add b-roll here", "Grade" and "Split at middle" to the clip toolbar. A new clip goes over the selected clip, at the first free whole second.
 **New clip ids start with the editor's name** (`rahul-title-1`). If two branches both invented `title-1` for two different clips, the merge would treat them as one clip edited twice. In a real product the id would be random (a UUID); here a readable id is nicer to look at.
 **Proof:** a browser test clicks "Start over", redoes all 10 example edits with buttons only, and gets the same sentences and the same three kinds of question.
+
+## Fixes found in the demo video
+
+**Wrong clip named as the ripple's cause.** Rahul deleted Point 1 (plain delete) and ripple-deleted Point 3; both are 10 s long. The diff picked the *first* removed clip of the right length, so it said "Ripple delete Point 1" and listed Point 3 as a separate removal. **Fix:** among the edits of the right size, pick the one that ends closest before the clips that moved. A test reproduces the exact case from the video.
+
+**Editing a title was hard to find.** The text box had no label, the button said "Set text", and on a normal clip the same box (for *adding* a title) looked like "edit this clip's title" with no save button. **Fix:** a visible label ("Title text" / "New title"), the button is now "Save text", and Enter works.

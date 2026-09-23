@@ -173,9 +173,21 @@ function toolbar(who: Who, tl: Timeline): HTMLElement | null {
   const grade = c.props.grade;
   const nextGrade = grade === undefined ? 'warm' : grade === 'warm' ? 'cool' : null;
   const isText = c.source === 'text';
+  const saveText = () => edit(who, `Text of ${q(c)} → “${input.value}”`, (t) => setProp(t, c.id, 'text', input.value));
+  const addTitle = () => {
+    const text = input.value.trim() || 'New title';
+    edit(who, `Add “${text}”`, (t) => addOver(t, who, c, 'T1', 3 * fps, 'title', 'text', text));
+  };
+  const inputId = `${who}-text-input`;
   const input = h('input', {
-    type: 'text', value: isText ? String(c.props.text ?? '') : '', placeholder: 'Title text',
-    'aria-label': isText ? 'Text of this title' : 'Text for a new title', 'data-key': k('text-input'),
+    type: 'text', id: inputId, value: isText ? String(c.props.text ?? '') : '',
+    placeholder: isText ? '' : 'Type a title…', 'data-key': k('text-input'),
+    // Enter does the same as the button next to the box.
+    onkeydown: (e: KeyboardEvent) => {
+      if (e.key !== 'Enter') return;
+      if (isText) saveText();
+      else if (c.track !== 'T1') addTitle();
+    },
   }) as HTMLInputElement;
   const half = c.start + Math.floor((end(c) - c.start) / 2);
 
@@ -195,18 +207,10 @@ function toolbar(who: Who, tl: Timeline): HTMLElement | null {
       btn('grade', `Grade: ${grade ?? 'none'} → ${nextGrade ?? 'none'}`, `Grade of ${q(c)} → ${nextGrade ?? 'none'}`, (t) => setProp(t, c.id, 'grade', nextGrade)),
     ),
     h('div', { class: 'tools' },
+      h('label', { class: 'field-label', for: inputId }, isText ? 'Title text' : 'New title'),
       input,
-      isText && h('button', {
-        class: 'btn sm', 'data-key': k('text'),
-        onclick: () => edit(who, `Text of ${q(c)} → “${input.value}”`, (t) => setProp(t, c.id, 'text', input.value)),
-      }, 'Set text'),
-      c.track !== 'T1' && h('button', {
-        class: 'btn sm', 'data-key': k('add-title'),
-        onclick: () => {
-          const text = input.value.trim() || 'New title';
-          edit(who, `Add “${text}”`, (t) => addOver(t, who, c, 'T1', 3 * fps, 'title', 'text', text));
-        },
-      }, 'Add title here'),
+      isText && h('button', { class: 'btn sm', 'data-key': k('text'), onclick: saveText }, 'Save text'),
+      c.track !== 'T1' && h('button', { class: 'btn sm', 'data-key': k('add-title'), onclick: addTitle }, 'Add title here'),
       c.track !== 'V2' && !isText &&
         btn('add-broll', 'Add b-roll here', `Add b-roll over ${q(c)}`, (t) => addOver(t, who, c, 'V2', 2 * fps, 'broll', 'broll.mp4', 'New b-roll')),
     ));

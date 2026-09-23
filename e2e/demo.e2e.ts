@@ -131,7 +131,7 @@ test('after "Start over", every example edit can be made by hand with the button
 
   // Aditi, by hand.
   await pick('aditi', 'p2'); await press('aditi', 'Ripple delete');
-  await pick('aditi', 'title'); await type('aditi', 'Ship week'); await press('aditi', 'Set text');
+  await pick('aditi', 'title'); await type('aditi', 'Ship week'); await press('aditi', 'Save text');
   await pick('aditi', 'p3'); await type('aditi', 'Three things we learned'); await press('aditi', 'Add title here');
 
   // Rahul, by hand.
@@ -139,7 +139,7 @@ test('after "Start over", every example edit can be made by hand with the button
   await press('rahul', /^Grade/);
   await pick('rahul', 'p3'); await press('rahul', 'Grain');
   await pick('rahul', 'laptop'); await press('rahul', /^Opacity/);
-  await pick('rahul', 'title'); await type('rahul', 'Launch week 2026'); await press('rahul', 'Set text');
+  await pick('rahul', 'title'); await type('rahul', 'Launch week 2026'); await page.locator('.panel.rahul .toolbar input').press('Enter'); await page.waitForTimeout(80); // Enter saves too
   await pick('rahul', 'p3'); await press('rahul', 'Add b-roll here');
   await type('rahul', 'Built in the browser'); await press('rahul', 'Add title here');
 

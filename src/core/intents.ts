@@ -81,9 +81,11 @@ export function findRipples(before: Timeline, after: Timeline, changes = diff(be
 
     let cause: Ripple['cause'] = null;
     let cut: [Frame, Frame] | null = null;
-    const del = removed.find((r) => !usedCause.has(r.id) && -duration(r.before) === shift && end(r.before) <= firstMoved);
-    const trim = mods.find((m) => !usedCause.has(m.id) && !movedIds.has(m.id) && lengthChange(m) === shift && end(m.before) <= firstMoved);
-    const ins = added.find((a) => !usedCause.has(a.id) && duration(a.after) === shift && a.after.start <= firstMoved);
+    // Several edits can have the right size (two 10s clips were removed, but only one
+    // was a ripple). The cause is the one that ends closest before the clips that moved.
+    const del = closest(removed.filter((r) => !usedCause.has(r.id) && -duration(r.before) === shift && end(r.before) <= firstMoved), (r) => end(r.before));
+    const trim = closest(mods.filter((m) => !usedCause.has(m.id) && !movedIds.has(m.id) && lengthChange(m) === shift && end(m.before) <= firstMoved), (m) => end(m.before));
+    const ins = closest(added.filter((a) => !usedCause.has(a.id) && duration(a.after) === shift && a.after.start <= firstMoved), (a) => a.after.start);
     if (del) {
       cause = { kind: 'delete', id: del.id };
       cut = [del.before.start, end(del.before)];
@@ -112,6 +114,11 @@ export function findRipples(before: Timeline, after: Timeline, changes = diff(be
     ripples.push({ shift, moved: [...movedIds], cause, alsoRemoved, alsoTrimmed });
   }
   return ripples;
+}
+
+/** The item with the largest position, i.e. the one nearest the clips that moved. */
+function closest<T>(items: T[], pos: (x: T) => Frame): T | undefined {
+  return items.reduce<T | undefined>((best, x) => (best === undefined || pos(x) > pos(best) ? x : best), undefined);
 }
 
 /** Clip id → shift, for every clip that only slid because of a ripple. The merge uses this. */
