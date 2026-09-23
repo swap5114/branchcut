@@ -170,6 +170,7 @@ button.clip:hover { border-color: var(--ink); }
 .toolbar .title { font-size: 13px; margin-bottom: 8px; }
 .toolbar .title .mono { color: var(--muted); }
 .tools { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.tools + .tools { margin-top: 6px; }
 .tools input { font: 13px var(--sans); padding: 6px 8px; border: 1px solid var(--rule-strong); background: var(--paper); color: var(--ink); border-radius: 2px; min-width: 0; width: 12em; }
 .status { font-size: 13px; color: var(--conflict); min-height: 1.4em; margin: 6px 0 0; }
 .mono { font-family: var(--mono); font-size: .92em; }

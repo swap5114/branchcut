@@ -6,7 +6,7 @@ import { canonical } from '../core/canonical.ts';
 import { diff, type Group } from '../core/diff.ts';
 import { fmtTime, type Intent, label } from '../core/intents.ts';
 import { type Conflict, merge, type MergeResult, type Origin } from '../core/merge.ts';
-import { deleteClip, moveClip, rippleDelete, rippleTrimEnd, setProp, toggleEffect } from '../core/ops.ts';
+import { addClip, deleteClip, moveClip, rippleDelete, rippleTrimEnd, setProp, split, toggleEffect } from '../core/ops.ts';
 import { Repo, type CommitInfo } from '../core/repo.ts';
 import { sampleTimeline } from '../core/sample.ts';
 import { aditiSteps, rahulSteps } from '../core/scenario.ts';
@@ -170,7 +170,14 @@ function toolbar(who: Who, tl: Timeline): HTMLElement | null {
   const nextOp = op === undefined ? 0.8 : op === 0.8 ? 0.5 : null;
   const btn = (key: string, text: string, message: string, fn: (t: Timeline) => Timeline, extra: Record<string, unknown> = {}) =>
     h('button', { class: 'btn sm', 'data-key': k(key), onclick: () => edit(who, message, fn), ...extra }, text);
-  const input = h('input', { type: 'text', value: String(c.props.text ?? ''), 'aria-label': 'Text', 'data-key': k('text-input') }) as HTMLInputElement;
+  const grade = c.props.grade;
+  const nextGrade = grade === undefined ? 'warm' : grade === 'warm' ? 'cool' : null;
+  const isText = c.source === 'text';
+  const input = h('input', {
+    type: 'text', value: isText ? String(c.props.text ?? '') : '', placeholder: 'Title text',
+    'aria-label': isText ? 'Text of this title' : 'Text for a new title', 'data-key': k('text-input'),
+  }) as HTMLInputElement;
+  const half = c.start + Math.floor((end(c) - c.start) / 2);
 
   return h('div', { class: 'toolbar' },
     h('div', { class: 'title' }, h('strong', {}, clipText(c)), ' ', h('span', { class: 'mono' }, `${secs(tl, c.start)}–${secs(tl, end(c))}`)),
@@ -180,16 +187,49 @@ function toolbar(who: Who, tl: Timeline): HTMLElement | null {
       btn('rtrim', 'Ripple trim 1s', `Ripple trim ${q(c)} by 1s`, (t) => rippleTrimEnd(t, c.id, fps)),
       btn('rdel', 'Ripple delete', `Ripple delete ${q(c)}`, (t) => rippleDelete(t, c.id)),
       btn('del', 'Delete', `Delete ${q(c)}`, (t) => deleteClip(t, c.id)),
+      btn('split', 'Split at middle', `Split ${q(c)} at ${secs(tl, half)}`, (t) => split(t, c.id, half), { disabled: half <= c.start }),
+    ),
+    h('div', { class: 'tools' },
       btn('grain', 'Grain', `Grain on ${q(c)}`, (t) => toggleEffect(t, c.id, 'grain'), { 'aria-pressed': String(c.effects.includes('grain')) }),
       btn('opacity', `Opacity: ${op ?? 'none'} → ${nextOp ?? 'none'}`, `Opacity of ${q(c)} → ${nextOp ?? 'none'}`, (t) => setProp(t, c.id, 'opacity', nextOp)),
-      c.source === 'text' && [
-        input,
-        h('button', {
-          class: 'btn sm', 'data-key': k('text'),
-          onclick: () => edit(who, `Text of ${q(c)} → “${input.value}”`, (t) => setProp(t, c.id, 'text', input.value)),
-        }, 'Set text'),
-      ],
+      btn('grade', `Grade: ${grade ?? 'none'} → ${nextGrade ?? 'none'}`, `Grade of ${q(c)} → ${nextGrade ?? 'none'}`, (t) => setProp(t, c.id, 'grade', nextGrade)),
+    ),
+    h('div', { class: 'tools' },
+      input,
+      isText && h('button', {
+        class: 'btn sm', 'data-key': k('text'),
+        onclick: () => edit(who, `Text of ${q(c)} → “${input.value}”`, (t) => setProp(t, c.id, 'text', input.value)),
+      }, 'Set text'),
+      c.track !== 'T1' && h('button', {
+        class: 'btn sm', 'data-key': k('add-title'),
+        onclick: () => {
+          const text = input.value.trim() || 'New title';
+          edit(who, `Add “${text}”`, (t) => addOver(t, who, c, 'T1', 3 * fps, 'title', 'text', text));
+        },
+      }, 'Add title here'),
+      c.track !== 'V2' && !isText &&
+        btn('add-broll', 'Add b-roll here', `Add b-roll over ${q(c)}`, (t) => addOver(t, who, c, 'V2', 2 * fps, 'broll', 'broll.mp4', 'New b-roll')),
     ));
+}
+
+/**
+ * Adds a new clip on `track`, over the selected clip: at its start if that
+ * spot is free, otherwise at the first free whole second while still over it.
+ * Ids start with the editor's name, so two branches never invent the same id
+ * for two different clips (the merge would think they are one clip).
+ */
+function addOver(t: Timeline, who: Who, over: Clip, track: string, len: number, kind: string, source: string, name: string): Timeline {
+  let n = 1;
+  while (t.clips[`${who}-${kind}-${n}`]) n++;
+  const id = `${who}-${kind}-${n}`;
+  const props: Record<string, string> = source === 'text' ? { name, text: name } : { name };
+  for (let start = over.start; start < end(over); start += t.fps) {
+    try {
+      return addClip(t, { id, track, start, source, in: 0, out: len, props, effects: [] });
+    } catch { /* that spot is taken; try one second later */ }
+  }
+  const trackName = t.tracks.find((x) => x.id === track)?.name ?? track;
+  throw new Error(`No free ${len / t.fps}s on ${trackName} over ${q(over)}. Move or delete a clip there first.`);
 }
 
 // ---------- conflict wording ----------

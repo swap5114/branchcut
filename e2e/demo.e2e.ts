@@ -99,3 +99,69 @@ test('the demo: full merge flow, no console errors, phone, dark mode, keyboard, 
 
   assert.deepEqual(problems, []);
 });
+
+test('after "Start over", every example edit can be made by hand with the buttons', async (t) => {
+  const html = await readFile('docs/index.html');
+  const server = createServer((_, res) => res.writeHead(200, { 'content-type': 'text/html' }).end(html));
+  await new Promise<void>((r) => server.listen(0, r));
+  const browser = await launch();
+  t.after(async () => { await browser.close(); server.close(); });
+  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  const problems: string[] = [];
+  page.on('pageerror', (e) => problems.push(e.message));
+  page.on('console', (m) => { if (m.type() === 'error') problems.push(m.text()); });
+  await page.goto(`http://localhost:${(server.address() as AddressInfo).port}/`);
+  await page.waitForSelector('[data-lane="merge"]');
+  await page.getByRole('button', { name: 'Start over' }).click();
+  await page.locator('.card').first().waitFor({ state: 'detached' });
+
+  // Every click re-renders the page, so give each render a moment to land.
+  const settle = () => page.waitForTimeout(80);
+  const pick = async (who: string, clip: string) => {
+    await page.locator(`[data-lane="${who}"] button[data-clip="${clip}"]`).click(); // button = the real clip, not its ghost
+    await settle();
+  };
+  const press = async (who: string, name: string | RegExp) => {
+    await page.locator(`.panel.${who} .toolbar`).getByRole('button', { name }).click();
+    await settle();
+  };
+  const type = async (who: string, text: string) => {
+    await page.locator(`.panel.${who} .toolbar input`).fill(text);
+  };
+
+  // Aditi, by hand.
+  await pick('aditi', 'p2'); await press('aditi', 'Ripple delete');
+  await pick('aditi', 'title'); await type('aditi', 'Ship week'); await press('aditi', 'Set text');
+  await pick('aditi', 'p3'); await type('aditi', 'Three things we learned'); await press('aditi', 'Add title here');
+
+  // Rahul, by hand.
+  await pick('rahul', 'intro'); await press('rahul', 'Ripple trim 1s');
+  await press('rahul', /^Grade/);
+  await pick('rahul', 'p3'); await press('rahul', 'Grain');
+  await pick('rahul', 'laptop'); await press('rahul', /^Opacity/);
+  await pick('rahul', 'title'); await type('rahul', 'Launch week 2026'); await press('rahul', 'Set text');
+  await pick('rahul', 'p3'); await press('rahul', 'Add b-roll here');
+  await type('rahul', 'Built in the browser'); await press('rahul', 'Add title here');
+
+  // The same sentences as the example...
+  for (const text of [
+    'Ripple delete "Point 2" (with "Laptop b-roll"): 4 clips moved −10s',
+    'Added "Three things we learned"',
+    'Ripple trim "Intro" (end −1s): 8 clips moved −1s',
+    'Grade of "Intro": none → warm',
+    'Effects on "Point 3": added grain',
+    'Opacity of "Laptop b-roll": none → 0.8',
+    'Added "New b-roll"',
+    'Added "Built in the browser"',
+  ]) await page.locator('.intents li', { hasText: text }).first().waitFor();
+
+  // ...and the same three kinds of question.
+  const kinds = await page.locator('.card').evaluateAll((els) => els.map((e) => (e as HTMLElement).dataset.conflict!.split(':')[0]).sort());
+  assert.deepEqual(kinds, ['delete', 'edit', 'overlap']);
+
+  // Split, which the example does not use.
+  await pick('aditi', 'p1'); await press('aditi', 'Split at middle');
+  await page.locator('.intents li', { hasText: 'Split "Point 1" at 9s' }).waitFor();
+
+  assert.deepEqual(problems, []);
+});

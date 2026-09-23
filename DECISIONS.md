@@ -156,3 +156,10 @@ One entry per phase: the decision, the other options, and why we chose this one.
 
 **Decision: three documents for three readers.** README for the founders and engineers on GitHub (story table first, then ideas, numbers, limits). INTERVIEW.md for Vansh to say out loud (no file names, no code). LOOM.md as a 90-second shot list.
 **Why:** each reader wants a different thing. The README leads with the demo story because that is what makes the problem concrete; the limits section is honest because the founders will find them anyway.
+
+## After Phase 8: every example edit can be made by hand
+
+**Found:** 4 of the 10 example edits (add a title, add b-roll, grade) had no button, and split had none either. A visitor could see "Added …" in the example but could not do it after "Start over".
+**Decision:** add "Add title here", "Add b-roll here", "Grade" and "Split at middle" to the clip toolbar. A new clip goes over the selected clip, at the first free whole second.
+**New clip ids start with the editor's name** (`rahul-title-1`). If two branches both invented `title-1` for two different clips, the merge would treat them as one clip edited twice. In a real product the id would be random (a UUID); here a readable id is nicer to look at.
+**Proof:** a browser test clicks "Start over", redoes all 10 example edits with buttons only, and gets the same sentences and the same three kinds of question.
